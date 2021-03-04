@@ -68,8 +68,9 @@ class sudoku extends PureComponent {
         blockPos = hashTable.x[x] + hashTable.y[y] * 3
         let childPos = 1
         
-        console.log("XYposTrans", "c1",((y - 1) * 9 + x) )
-        console.log("XYposTrans", "c2", ( (blockPos - 1) * 9))
+        // console.log("XYposTrans", "c1",((y - 1) * 9 + x) )
+        // console.log("XYposTrans", "c2", ( (blockPos - 1) * 9))
+        // childPos = 
         childPos = ((y - 1) * 9 + x) - ((blockPos - 1) * 9)////////!!!!!!!!!!
 
         return { blockPos, childPos }
