@@ -1,22 +1,22 @@
 import React, { PureComponent } from 'react';
-import { Spin } from 'antd';
+import { Spin, Image } from 'antd';
 import { LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
-import { Dcopy } from './funcLib';
+import { Dcopy, createGUID } from './funcLib';
+import { ContextMenu } from './contextmenu';
 
 window.globalRConfig = {
   sourceList: [
-    "https://cdn.jsdelivr.net/gh/xieqiqiang001",
+    // "https://cdn.jsdelivr.net/gh/xieqiqiang001",
     "https://cdn.jsdelivr.net/gh/WildXBird",
   ]
 }
-let Fthis
 let ResFetchRaw = function (pathname = "", isFullUrl = false, sourceIndex = -1, onProgress = (p, t, l) => { }) {
   return new Promise(function (resolve, reject) {
-    if (pathname.indexOf("https://") == 0 && !isFullUrl) {
+    if (pathname.indexOf("https://") === 0 && !isFullUrl) {
       console.error("ResFetchRaw", "got full url,but 'isFullUrl' is not true, pls check!")
     }
-    if (pathname.indexOf("http://") == 0) {
+    if (pathname.indexOf("http://") === 0) {
       console.error("ResFetchRaw", "http URL is not allowed, pls replace!")
       reject(true)
     }
@@ -76,6 +76,8 @@ let ResFetch2URL = function (pathname, isFullUrl, onProgress) {
       resolve({
         responseCode: response.responseCode,
         contentType: response.contentType,
+        url: response.url,
+        arrayBuffer: response.arrayBuffer,
         blobUrl
       })
     }).catch(function (error) {
@@ -84,36 +86,43 @@ let ResFetch2URL = function (pathname, isFullUrl, onProgress) {
   })
 }
 
-class Rimg extends PureComponent {
+class RPicture extends PureComponent {
   constructor(props) {
     super(props)
+    this.ref = React.createRef();
+    this.GUID = createGUID()
     this.state = {
-      picBlob: undefined,//
+      componentDidMount: false,
+      picURL: undefined,
+      picBlob: null,
+      picType: null,
+      picBlobUrl: undefined,
+      picReady: false,
       failed: false,
-      removeSpin: false,//
+      removeSpin: false,
       hasProgress: false,
+      fitWidth: false,
     }
-    this.clickPic = function () {
-      if (Fthis.state.failed) {
-        Fthis.setState({
-          picBlob: undefined,
-          failed: false,
-          removeSpin: false,
-          hasProgress: false,
-        })
-        Fthis.loadPic(Fthis.props.path)
-      }
-    }
+    this.clickPic = function () { }
     this.loadPic = function (path) {
+      let Fthis = this
       ResFetch2URL(path, false).then(function (response) {
         Fthis.setState({
-          picBlob: response.blobUrl
+          picBlob: response.arrayBuffer,
+          picBlobUrl: response.blobUrl,
+          picType: response.contentType,
+          picURL: response.url
         })
+        setTimeout(() => {
+          Fthis.setState({
+            picReady: true
+          })
+        }, 100);
         setTimeout(() => {
           Fthis.setState({
             removeSpin: true
           })
-        }, 1500);
+        }, 1800);
       }).catch(function (error) {
         console.log(error)
         Fthis.setState({
@@ -124,14 +133,36 @@ class Rimg extends PureComponent {
     this.transparentBg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAA1SURBVHjaYjxz5sx/BjzA2NgYnzQDEwOFYNSAwWAA4/////Gmg7Nnz44G4vA3AAAAAP//AwD0ygp+lRPdFgAAAABJRU5ErkJggg=="
   }
   componentDidMount() {
-    setTimeout(() => {
-      // ResFetch2URL("/browser-voiceAssistant/WeatherIcon/100.png").then(function (response) {
-      Fthis.loadPic(Fthis.props.path)
-    }, 1000);
+    let Fthis = this
+    Fthis.loadPic(Fthis.props.path)
+    let onresize = function () {
+      Fthis.setState({
+        fitWidth: Fthis.ref.current.offsetWidth
+      })
+    }
+    this.onresize = onresize
+    window.addEventListener('resize', this.onresize, false);
+    let clickPic = function () {
+      if (Fthis.state.failed) {
+        Fthis.setState({
+          componentDidMount: false,
+          picURL: undefined,
+          picBlob: undefined,
+          picBlobUrl: undefined,
+          picReady: false,
+          failed: false,
+          removeSpin: false,
+          hasProgress: false,
+          fitWidth: false,
+        })
+        Fthis.loadPic(Fthis.props.path)
+      }
+    }
+    this.clickPic = clickPic
+    Fthis.setState({ componentDidMount: true })
   }
-
   render() {
-    Fthis = this
+    let Fthis = this
     let props = Dcopy(Fthis.props)
     if (!(props.height > 0)) {
       props.height = 100
@@ -142,18 +173,34 @@ class Rimg extends PureComponent {
     if (typeof (props.style) != "object") {
       props.style = {}
     }
+    if (props.fitWidth !== false) {
+      if (typeof (props.style) != "object" || typeof (props.style.width) == "undefined") {
+        props.style.width = "100%"
+      }
+      if (Fthis.ref.current != null) {
+        let actualWidth
+        if (Fthis.state.fitWidth > 0) {
+          actualWidth = Fthis.state.fitWidth
+        } else {
+          actualWidth = Fthis.ref.current.offsetWidth
+        }
+        props.height = actualWidth / props.width * props.height
+      }
+    }
     let picBackgroundImage = ""
     let picBackground = "url(" + this.transparentBg + ")"
-    let transition = "all 1s ease-out"
+    let transition = "all 0.4s ease-out"
     let loadingLayerOpacity = 1
     let picLayerOpacity = 0
-    if (Fthis.state.picBlob) {
-      //加载完成
-      picBackgroundImage = "url(" + Fthis.state.picBlob + ")"
+    if (Fthis.state.picBlobUrl) {
+      //载入图片
+      picBackgroundImage = "url(" + Fthis.state.picBlobUrl + ")"
+    }
+    if (Fthis.state.picReady) {
+      //显示图片
       loadingLayerOpacity = 0
       picLayerOpacity = 1
     }
-
     let loadingLayerInside = <LoadingOutlined style={{
       fontSize: 50, margin: "0 auto", margin: "auto", display: "block", top: 0, left: 0, right: 0, bottom: 0,
       position: "absolute", width: 50, height: 50,
@@ -167,28 +214,47 @@ class Rimg extends PureComponent {
     if (props.height < 75 || props.width < 75) {
       loadingLayerInside = ""
     }
-    let loadingLayer = <div key={"Rimg-loadingLayer"} style={{ transition, width: "100%", height: "100%", position: "absolute", backgroundColor: "#d8d8d8", opacity: loadingLayerOpacity }}>{loadingLayerInside}</div>
+    let loadingLayer = <div key={"Rimg-loadingLayer-" + this.GUID} style={{ transition, width: "100%", height: "100%", position: "absolute", backgroundColor: "#d8d8d8", opacity: loadingLayerOpacity }}>{loadingLayerInside}</div>
     if (Fthis.state.removeSpin) {
       loadingLayer = ""
     }
+    console.log("this.state.picURL,", this.state, this.state.picURL)
     return (
-      <div key={"Rimg-parent"} style={{
-        height: props.height,
-        width: props.width,
-        position: "relative",
-        backgroundImage: picBackground,
-        backgroundPosition:"center",
-        ...props.style
-      }} onClick={this.clickPic}>
-        <div key={"Rimg-picLayer"} style={{ transition, width: "100%", height: "100%", position: "absolute", backgroundImage:picBackgroundImage, backgroundSize: "cover", backgroundPosition: "center", opacity: picLayerOpacity }} />
-        {loadingLayer}
-      </div>
+      <ContextMenu
+        type="pic"
+        content={{
+          fileType: this.state.picType,
+          url: this.state.picURL,
+          blobUrl: this.state.picBlobUrl,
+          blob: this.state.picBlob,
+        }}
+        action={{
+          back: false,
+        }}>
+        <div key={"Rimg-parent-" + this.GUID} style={{
+          height: props.height,
+          width: props.width,
+          position: "relative",
+          backgroundImage: picBackground,
+          backgroundPosition: "center",
+          overflow: "hidden",
+          ...props.style
+        }}
+          onClick={this.clickPic}
+          ref={this.ref}>
+          <div key={"Rimg-picLayer-" + this.GUID} style={{ transition, width: "100%", height: "100%", position: "absolute", backgroundImage: picBackgroundImage, backgroundSize: "cover", backgroundPosition: "center", opacity: 1 }} />
+          {loadingLayer}
+        </div>
+      </ContextMenu>
     );
 
   }
+
   componentWillUnmount() {
+    let Fthis = this
+    window.removeEventListener('resize', Fthis.onresize);
   }
 }
 
-export { Rimg, ResFetchRaw, ResFetch2URL };
+export { RPicture, ResFetchRaw, ResFetch2URL };
 
