@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import { Spin, Image } from 'antd';
 import { LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
-import { Dcopy, createGUID } from './funcLib';
+import { Dcopy, createGUID } from './func/lib';
 import { ContextMenu } from './contextmenu';
 
 window.globalRConfig = {

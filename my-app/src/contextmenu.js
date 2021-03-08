@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import { Spin, Image } from 'antd';
 import { LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
-import { Dcopy, createGUID, isBlob } from './funcLib';
+import { Dcopy, createGUID, isBlob } from './func/lib';
 import { Menu, Dropdown } from 'antd';
 
 
