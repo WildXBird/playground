@@ -3,6 +3,7 @@ import { Spin, Image } from 'antd';
 import { LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons';
 
 import { Dcopy, createGUID } from './func/lib';
+import { convertImage } from './func/image';
 import { ContextMenu } from './contextmenu';
 
 window.globalRConfig = {

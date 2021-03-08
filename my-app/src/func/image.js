@@ -1,46 +1,18 @@
 import React, { PureComponent } from 'react';
-let Dcopy = function (source) {
-    return JSON.parse(JSON.stringify(source))
-}
-let createGUID = function (source) {
-    function S4() {
-        return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
-    }
-    let result = (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4())
-    return result;
-}
-let isBlob = function (source) {
-    try {
-        return ArrayBuffer.isView(new DataView(source))
-    } catch (error) {
-        return false
-    }
-}
-let Blob2ArrayBuffer = function (source) {
-    return new Promise(function (resolve, reject) {
-        try {
-            var blob = new Blob([1, 2, 3, 4, 5])
-            var reader = new FileReader()
-            reader.readAsArrayBuffer(blob)
-
-            reader.onload = function () {
-                console.log(this.result)
-            }
-        } catch (error) {
-            return false
-        }
-    })
-}
-// let MyComponent = function (source) {
-window.MyComponent = function (source) {
-    const MyComponent = React.memo(function MyComponent(props) {
-       console.log("props",props)
-       return performance.now()
-      });
-      return MyComponent
+let convertImage = function (source) {
+        var canvas = document.createElement('canvas');
+        var context2D = canvas.getContext('2d');
+        self.convertImage = function (image, format) {
+            context2D.clearRect(0, 0, canvas.width, canvas.height);
+            canvas.width = image.naturalWidth;
+            canvas.height = image.naturalHeight;
+            image.crossOrigin = "Anonymous";
+            context2D.drawImage(image, 0, 0);
+            return  canvas.toDataURL('image/' + (format || 'png'),  1);
+        };
 }
 
 
 
-export { Dcopy, createGUID, isBlob };
+export { convertImage };
 
