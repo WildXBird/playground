@@ -11,3 +11,12 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.ant-dropdown {
+  user-select: none;
+}
+
+
+.cancer-ctabs>.ant-tabs>.ant-tabs-nav-wrap>.ant-tabs-nav-list>.ant-tabs-tab>div {
+  font-size: 38px;
+}
